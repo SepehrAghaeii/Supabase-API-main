@@ -21,6 +21,7 @@ SUPABASE_URL=your_supabase_url SUPABASE_KEY=your_supabase_key PORT=3000
 - `POST /customers` - Add a new customer (body: {email})
 - `PUT /customers/:id` - Update a customer (body: {email})
 - `DELETE /customers/:id` - Delete a customer
+- `GET /customers/me` - Get current user's info (requires token)
 
 ## Technologies
 - Node.js
