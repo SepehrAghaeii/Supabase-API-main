@@ -13,8 +13,9 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// تست اولیه اتصال به دیتابیس
 (async () => {
-    const { data, error } = await supabase.from('customers').select('*'); // 'users' رو به 'customers' عوض کردم
+    const { data, error } = await supabase.from('customers').select('*');
     if (error) {
         console.error('❌ مشکل در اتصال به Supabase:', error.message);
     } else {
@@ -22,14 +23,28 @@ const supabase = createClient(supabaseUrl, supabaseKey);
     }
 })();
 
-// دریافت تمام کاربران (محافظت‌شده)
+// تست اتصال سرور
+app.get('/', (req, res) => {
+    res.send('✅ API is running...');
+});
+
+// دریافت همه مشتری‌ها (نیاز به توکن)
 app.get('/customers', protect, async (req, res) => {
     const { data, error } = await supabase.from('customers').select('*');
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
 });
 
-// ویرایش اطلاعات کاربر (محافظت‌شده)
+// دریافت اطلاعات کاربر فعلی (نیاز به توکن)
+app.get('/customers/me', protect, async (req, res) => {
+    const userId = req.user.id;
+    const { data, error } = await supabase.from('customers').select('*').eq('id', userId).single();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data) return res.status(404).json({ error: 'کاربر یافت نشد' });
+    res.json(data);
+});
+
+// ویرایش اطلاعات مشتری (نیاز به توکن)
 app.put('/customers/:id', protect, async (req, res) => {
     const { id } = req.params;
     const { email } = req.body;
@@ -38,7 +53,7 @@ app.put('/customers/:id', protect, async (req, res) => {
     res.json(data);
 });
 
-// حذف کاربر (محافظت‌شده)
+// حذف مشتری (نیاز به توکن)
 app.delete('/customers/:id', protect, async (req, res) => {
     const { id } = req.params;
     const { error } = await supabase.from('customers').delete().eq('id', id);
@@ -46,22 +61,10 @@ app.delete('/customers/:id', protect, async (req, res) => {
     res.send('✅ کاربر با موفقیت حذف شد');
 });
 
-app.get('/customers/me', protect, async (req, res) => {
-    const userId = req.user.id; // از توکن می‌گیریم
-    const { data, error } = await supabase.from('customers').select('*').eq('id', userId).single();
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
-  });
-
 // روت‌های احراز هویت
 app.post('/register', registerUser);
 app.post('/login', loginUser);
 app.get('/profile', getUserProfile);
-
-// تست اتصال
-app.get('/', (req, res) => {
-    res.send('✅ API is running...');
-});
 
 // راه‌اندازی سرور
 const PORT = process.env.PORT || 3000;
