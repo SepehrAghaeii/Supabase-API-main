@@ -46,6 +46,13 @@ app.delete('/customers/:id', protect, async (req, res) => {
     res.send('✅ کاربر با موفقیت حذف شد');
 });
 
+app.get('/customers/me', protect, async (req, res) => {
+    const userId = req.user.id; // از توکن می‌گیریم
+    const { data, error } = await supabase.from('customers').select('*').eq('id', userId).single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  });
+
 // روت‌های احراز هویت
 app.post('/register', registerUser);
 app.post('/login', loginUser);
